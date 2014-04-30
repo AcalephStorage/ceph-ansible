@@ -47,3 +47,10 @@ osd_op_threads: 8
 osd_recovery_max_active: 5
 osd_max_backfills: 2
 osd_recovery_op_priority: 2
+
+## Proxy Support
+# For running behind firewalled environments
+# eg. http_proxy: "http://proxy.example.com:8080"
+proxy_env:
+  http_proxy:
+  https_proxy:

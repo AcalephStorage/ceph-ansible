@@ -16,18 +16,27 @@
 
 - name: Install dependancies
   yum: name={{ item }} state=present
+  environment: proxy_env
   with_items:
     - python-pycurl
     - ntp
 
 - name: Install the Ceph key
   rpm_key: key={{ apt_key }} state=present
+  when: (not proxy_env.http_proxy) and (not proxy_env.https_proxy)
+
+- name: Install the Ceph key
+  rpm_key: key={{ apt_key }} state=present
+  environment: proxy_env
+  when: proxy_env.http_proxy or proxy_env.https_proxy
 
 - name: Add Ceph repository
   command: rpm -U http://ceph.com/rpm-{{ ceph_release }}/{{ redhat_distro }}/noarch/ceph-release-1-0.el6.noarch.rpm creates=/etc/yum.repos.d/ceph.repo
+  environment: proxy_env
 
 - name: Install Ceph
   yum: name=ceph state=latest
+  environment: proxy_env
 
 - name: Generate Ceph configuration file
   template: src=roles/common/templates/ceph.conf.j2 dest=/etc/ceph/ceph.conf owner=root group=root mode=0644

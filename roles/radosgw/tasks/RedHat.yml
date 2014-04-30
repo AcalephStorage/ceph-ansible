@@ -15,12 +15,20 @@
 
 - name: Add special fastcgi repository key
   rpm_key: key=http://dag.wieers.com/rpm/packages/RPM-GPG-KEY.dag.txt
+  when: (not proxy_env.http_proxy) and (not proxy_env.https_proxy)
+
+- name: Add special fastcgi repository key
+  rpm_key: key=http://dag.wieers.com/rpm/packages/RPM-GPG-KEY.dag.txt
+  environment: proxy_env
+  when: proxy_env.http_proxy and proxy_env.https_proxy
 
 - name: Add special fastcgi repository
   command: rpm -ivh http://pkgs.repoforge.org/rpmforge-release/rpmforge-release-0.5.3-1.el6.rf.x86_64.rpm
+  environment: proxy_env
 
 - name: Install Apache, fastcgi, and Rados Gateway
   yum: name={{ item }} state=present
+  environment: proxy_env
   with_items:
     - httpd
     - mod_fastcgi
