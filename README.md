@@ -16,8 +16,8 @@ More details:
 
 * Authentication (cephx), this can be disabled.
 * Supports cluster public and private network.
-* Monitors deployment. You can easily start with one monitor and then progressively add new nodes. So can deploy one monitor for testing purpose. For production, I recommend to a
-* Object Storage Daemons. Like the monitors you can start with a certain amount of nodes and then grow this number. The playbook either supports a dedicated device for storing th
+* Monitors deployment. You can easily start with one monitor and then progressively add new nodes. So can deploy one monitor for testing purpose. For production, I recommend to always use an odd number of monitors, 3 tends to be the standard.
+* Object Storage Daemons. Like the monitors you can start with a certain amount of nodes and then grow this number. The playbook either supports a dedicated device for storing the journal or both journal and OSD data on the same device (using a tiny partition at the beginning of the device).
 * Metadata daemons.
 * Collocation. The playbook supports collocating Monitors, OSDs and MDSs on the same machine.
 * The playbook was validated on Debian Wheezy, Ubuntu 12.04 LTS and CentOS 6.4.
@@ -27,87 +27,11 @@ More details:
 
 ## Setup with Vagrant
 
-First source the `rc` file:
-
-    $ source rc
-
-Edit your `/etc/hosts` file with:
-
-    # Ansible hosts
-    127.0.0.1   ceph-mon0
-    127.0.0.1   ceph-mon1
-    127.0.0.1   ceph-mon2
-    127.0.0.1   ceph-osd0
-    127.0.0.1   ceph-osd1
-    127.0.0.1   ceph-osd2
-    127.0.0.1   ceph-rgw
-
-**Now since we use Vagrant and port forwarding, don't forget to collect the SSH local port of your VMs.**
-Then edit your `hosts` file accordingly.
-
-Ok let's get serious now.
 Run your virtual machines:
 
 ```bash
 $ vagrant up
 ...
-...
-...
-```
-
-Test if Ansible can access the virtual machines:
-
-```bash
-$ ansible all -m ping
-ceph-mon0 | success >> {
-    "changed": false,
-    "ping": "pong"
-}
-
-ceph-mon1 | success >> {
-    "changed": false,
-    "ping": "pong"
-}
-
-ceph-osd0 | success >> {
-    "changed": false,
-    "ping": "pong"
-}
-
-ceph-osd2 | success >> {
-    "changed": false,
-    "ping": "pong"
-}
-
-ceph-mon2 | success >> {
-    "changed": false,
-    "ping": "pong"
-}
-
-ceph-osd1 | success >> {
-    "changed": false,
-    "ping": "pong"
-}
-
-ceph-rgw | success >> {
-    "changed": false,
-    "ping": "pong"
-}
-```
-
-**DON'T FORGET TO GENERATE A FSID FOR THE CLUSTER AND A KEY FOR THE MONITOR**
-
-For this go to `group_vars/all` and `group_vars/mons` and append the fsid and key.
-
-These are **ONLY** examples, **DON'T USE THEM IN PRODUCTION**:
-
-* fsid: 4a158d27-f750-41d5-9e7f-26ce4c9d2d45
-* monitor: AQAWqilTCDh7CBAAawXt6kyTgLFCxSvJhTEmuw==
-
-Ready to deploy? Let's go!
-
-```bash
-$ ansible-playbook -f 7 -v site.yml
 ...
 ...
  ____________
@@ -120,13 +44,13 @@ $ ansible-playbook -f 7 -v site.yml
                 ||     ||
 
 
-ceph-mon0                  : ok=13   changed=10   unreachable=0    failed=0
-ceph-mon1                  : ok=13   changed=9    unreachable=0    failed=0
-ceph-mon2                  : ok=13   changed=9    unreachable=0    failed=0
-ceph-osd0                  : ok=19   changed=12   unreachable=0    failed=0
-ceph-osd1                  : ok=19   changed=12   unreachable=0    failed=0
-ceph-osd2                  : ok=19   changed=12   unreachable=0    failed=0
-ceph-rgw                   : ok=23   changed=16   unreachable=0    failed=0
+mon0                       : ok=16   changed=11   unreachable=0    failed=0
+mon1                       : ok=16   changed=10   unreachable=0    failed=0
+mon2                       : ok=16   changed=11   unreachable=0    failed=0
+osd0                       : ok=19   changed=7    unreachable=0    failed=0
+osd1                       : ok=19   changed=7    unreachable=0    failed=0
+osd2                       : ok=19   changed=7    unreachable=0    failed=0
+rgw                        : ok=20   changed=17   unreachable=0    failed=0
 ```
 
 Check the status:
@@ -141,3 +65,20 @@ $ vagrant ssh mon0 -c "sudo ceph -s"
       pgmap v17: 192 pgs, 3 pools, 9470 bytes data, 21 objects
             205 MB used, 29728 MB / 29933 MB avail
                  192 active+clean
+```
+
+To re-run the Ansible provisioning scripts:
+
+```bash
+$ vagrant provision
+```
+
+## Specifying fsid and secret key in production
+
+The Vagrantfile specifies an fsid for the cluster and a secret key for the
+monitor. If using these playbooks in production, you must generate your own `fsid`
+in `group_vars/all` and `monitor_secret` in `group_vars/mons`. Those files contain
+information about how to generate appropriate values for these variables.
+
+
+
