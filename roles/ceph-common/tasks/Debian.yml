@@ -16,7 +16,8 @@
 
 - name: Install dependencies
   apt: pkg={{ item }} state=present update_cache=yes cache_valid_time=3600 # we update the cache just in case...
-  env: proxy_env
+  environment: proxy_env
+  ignore_errors: true
   with_items:
     - python-pycurl
     - ntp
@@ -27,11 +28,11 @@
 
 - name: Add Ceph repository
   apt_repository: repo='deb http://ceph.com/debian-{{ ceph_release }}/ {{ ansible_lsb.codename }} main' state=present
-  env: proxy_env
+  environment: proxy_env
 
 - name: Install Ceph
   apt: pkg={{ item }} state=latest
-  env: proxy_env
+  environment: proxy_env
   with_items:
     - ceph
     - ceph-common    #|
