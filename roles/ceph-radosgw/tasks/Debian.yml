@@ -20,6 +20,7 @@
 - name: Add Ceph extra
   apt_repository: repo='deb http://ceph.com/packages/ceph-extras/debian {{ ansible_lsb.codename }} main' state=present
   environment: proxy_env
+  when: ansible_distribution != "Ubuntu"
 
 - name: Install Apache, fastcgi and Rados Gateway
   apt: pkg={{ item }} state=present
