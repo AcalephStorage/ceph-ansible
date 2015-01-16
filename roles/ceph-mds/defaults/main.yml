@@ -1,7 +1,4 @@
 ---
-# Variables here are applicable to the current role
+# You can override vars by using host or group vars
 
-## Ceph options
-#
 cephx: true
-

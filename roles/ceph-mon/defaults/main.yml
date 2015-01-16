@@ -1,14 +1,11 @@
 ---
-# Variables here are applicable to the current role
-
-## Ceph options
-#
+# You can override vars by using host or group vars
 
 # ACTIVATE BOTH FSID AND MONITOR_SECRET VARIABLES FOR NON-VAGRANT DEPLOYMENT
-# fsid:
+fsid: "{{ cluster_uuid.stdout }}"
 # monitor_secret:
 cephx: true
 
 # Rados Gateway options
 # referenced in common role too.
-radosgw: true
+radosgw: false

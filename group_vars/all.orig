@@ -102,6 +102,8 @@ dummy:
 #osd_recovery_max_chunk: 1048576
 #osd_recovery_threads: 1
 
+<<<<<<< HEAD
+=======
 ## MDS options
 #
 #mds: false # disable mds configuration in ceph.conf
@@ -111,6 +113,7 @@ dummy:
 #radosgw: false # referenced in monitor role too.
 #radosgw_dns_name: your.subdomain.tld # subdomains used by radosgw. See http://ceph.com/docs/master/radosgw/config/#enabling-subdomain-s3-calls
 
+>>>>>>> master
 ## Testing mode
 # enable this mode _only_ when you have a single node
 # if you don't want it keep the option commented
