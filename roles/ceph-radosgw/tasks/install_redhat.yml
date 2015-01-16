@@ -14,11 +14,13 @@
 
 - name: Add special fastcgi repository
   command: rpm -ivh http://pkgs.repoforge.org/rpmforge-release/rpmforge-release-0.5.3-1.el6.rf.x86_64.rpm
+  environment: proxy_env
 
 - name: "Install Apache, fastcgi, and Rados Gateway"
   yum: >
     name={{ item }}
     state=present
+  environment: proxy_env
   with_items:
     - httpd
     - mod_fastcgi

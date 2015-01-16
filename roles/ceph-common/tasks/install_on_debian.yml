@@ -5,6 +5,7 @@
     state=present
     update_cache=yes
     cache_valid_time=3600
+  environment: proxy_env
   with_items:
     - python-pycurl
     - ntp
@@ -50,6 +51,7 @@
   apt: >
     pkg={{ item }}
     state=latest
+  environment: proxy_env
   with_items:
     - ceph
     - ceph-common    #|

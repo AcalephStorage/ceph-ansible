@@ -91,6 +91,7 @@
     pkg={{ item }}
     state=present
     update_cache=yes
+  environment: proxy_env
   with_items:
     - apache2
     - libapache2-mod-fastcgi

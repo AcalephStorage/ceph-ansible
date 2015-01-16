@@ -3,6 +3,7 @@
   yum: >
     name={{ item }}
     state=present
+  environment: proxy_env
   with_items:
     - python-pycurl
     - ntp
@@ -29,10 +30,12 @@
 
 - name: Add Ceph stable repository
   command: "rpm -U http://ceph.com/rpm-{{ ceph_stable_release }}/{{ ceph_stable_redhat_distro }}/noarch/ceph-release-1-0.el6.noarch.rpm creates=/etc/yum.repos.d/ceph.repo"
+  environment: proxy_env
   when: ceph_stable
 
 - name: Add Ceph development repository
   command: "rpm -U http://gitbuilder.ceph.com/ceph-rpm-{{ ceph_dev_redhat_distro }}-x86_64-basic/ref/{{ ceph_dev_branch }}/noarch/ceph-release-1-0.{{ ceph_stable_redhat_distro }}.noarch.rpm creates=/etc/yum.repos.d/ceph.repo"
+  environment: proxy_env
   when: ceph_dev
 
 - name: Add Inktank Ceph Enterprise repository
@@ -48,10 +51,12 @@
   yum: >
     name=ceph
     state=latest
+  environment: proxy_env
 
 - name: Install Inktank Ceph Enterprise RBD Kernel modules
   yum: >
     name={{ item }}
+  environment: proxy_env
   with_items:
     - "{{ ceph_stable_ice_temp_path }}/kmod-libceph-{{ ceph_stable_ice_kmod }}.rpm"
     - "{{ ceph_stable_ice_temp_path }}/kmod-rbd-{{ ceph_stable_ice_kmod }}.rpm"

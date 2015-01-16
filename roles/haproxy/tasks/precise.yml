@@ -3,11 +3,13 @@
   apt_repository: >
     repo=ppa:vbernat/haproxy-1.5
     state=present
+  environment: proxy_env
 
 - name: Install haproxy
   apt: >
     name={{ item }}
     state=present
+  environment: proxy_env
   with_items:
    - haproxy
    - socat
