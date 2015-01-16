@@ -12,9 +12,6 @@
 - name: Add special fastcgi repository key
   rpm_key: key=http://dag.wieers.com/rpm/packages/RPM-GPG-KEY.dag.txt
 
-- name: Add special fastcgi repository key
-  rpm_key: key=http://dag.wieers.com/rpm/packages/RPM-GPG-KEY.dag.txt
-
 - name: Add special fastcgi repository
   command: rpm -ivh http://pkgs.repoforge.org/rpmforge-release/rpmforge-release-0.5.3-1.el6.rf.x86_64.rpm
 
