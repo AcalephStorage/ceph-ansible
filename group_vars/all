@@ -117,5 +117,5 @@ dummy:
 #common_single_host_mode: true
 
 proxy_env:
-  http_proxy: {{ http_proxy | default('') }}
-  https_proxy: {{ https_proxy | default('') }}
+  http_proxy: "{{ http_proxy | default('') }}"
+  https_proxy: "{{ https_proxy | default('') }}"
