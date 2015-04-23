@@ -1,9 +1,9 @@
 ---
 # You can override vars by using host or group vars
 
-#########
-# INSTALL
-#########
+###########
+# INSTALL #
+###########
 
 # /!\ EITHER ACTIVE ceph_stable OR ceph_stable_ice OR ceph_dev /!\
 
@@ -13,7 +13,7 @@
 # COMMUNITY VERSION
 ceph_stable: true # use ceph stable branch
 ceph_stable_key: https://ceph.com/git/?p=ceph.git;a=blob_plain;f=keys/release.asc
-ceph_stable_release: giant # ceph stable release
+ceph_stable_release: hammer # ceph stable release
 
 # This option is needed for _both_ stable and dev version, so please always fill the right version
 # # for supported distros, see http://ceph.com/rpm-{{ ceph_stable_release }}/
@@ -43,21 +43,22 @@ ceph_dev_branch: master # development branch you would like to use e.g: master, 
 ceph_dev_redhat_distro: centos7
 
 
-####################
-# CEPH CONFIGURATION
-####################
+######################
+# CEPH CONFIGURATION #
+######################
 
 ## Ceph options
 #
 fsid: "{{ cluster_uuid.stdout }}"
 cephx: true
-cephx_require_signatures: true # Kernel RBD does NOT support signatures!
+cephx_require_signatures: true # Kernel RBD does NOT support signatures for Kernels < 3.18!
 cephx_cluster_require_signatures: true
 cephx_service_require_signatures: false
 max_open_files: 131072
 
 # Logging
 disable_in_memory_logs: true # set this to false while enabling the options below
+rbd_client_log_file: /var/log/qemu/qemu-guest-$pid.log # must be writable by QEMU and allowed by SELinux or AppArmor
 
 # Debug logs
 enable_debug_global: false
@@ -120,10 +121,20 @@ osd_recovery_threads: 1
 #
 mds: false # disable mds configuration in ceph.conf
 
-# Rados Gateway options
+## Rados Gateway options
 #
 radosgw: false # referenced in monitor role too.
 #radosgw_dns_name: your.subdomain.tld # subdomains used by radosgw. See http://ceph.com/docs/master/radosgw/config/#enabling-subdomain-s3-calls
+radosgw_frontend: civetweb # supported options are 'apache' or 'civetweb', also edit roles/ceph-radosgw/defaults/main.yml
+radosgw_civetweb_port: 80
+
+## REST API options
+#
+restapi: false # disable restapi configuration in ceph.conf
+restapi_interface: eth1
+restapi_port: 5000
+restapi_base_url: /api/v0.1
+restapi_log_level: warning # available level are: critical, error, warning, info, debug
 
 ## Testing mode
 # enable this mode _only_ when you have a single node
@@ -131,9 +142,9 @@ radosgw: false # referenced in monitor role too.
 #common_single_host_mode: true
 
 
-###########
-# OS TUNING
-###########
+#############
+# OS TUNING #
+#############
 
 disable_transparent_hugepage: true
 disable_swap: true
@@ -142,3 +153,10 @@ os_tuning_params:
   - { name: fs.file-max, value: 26234859 }
   - { name: vm.zone_reclaim_mode, value: 0 }
   - { name: vm.vfs_cache_pressure, value: 50 }
+
+
+##########
+# DOCKER #
+##########
+
+docker: false

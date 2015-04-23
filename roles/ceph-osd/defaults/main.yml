@@ -51,8 +51,6 @@ zap_devices: false
 devices:
   - /dev/sdb
   - /dev/sdc
-  - /dev/sdd
-  - /dev/sde
 
 # Device discovery is based on the Ansible fact 'ansible_devices'
 # which reports all the devices on a system. If chosen all the disks
@@ -104,3 +102,12 @@ osd_directories:
   - /var/lib/ceph/osd/mydir2
   - /var/lib/ceph/osd/mydir3
   - /var/lib/ceph/osd/mydir4
+
+
+##########
+# DOCKER #
+##########
+
+ceph_containerized_deployment: false
+ceph_osd_docker_username: ceph
+ceph_osd_docker_imagename: "osd:latest"

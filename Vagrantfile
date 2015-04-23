@@ -1,14 +1,19 @@
 # -*- mode: ruby -*-
 # vi: set ft=ruby :
 
+require 'yaml'
 VAGRANTFILE_API_VERSION = '2'
 
-NMONS   = 3
-NOSDS   = 3
-NMDSS   = 0
-NRGWS   = 0
-CLIENTS = 0
-SUBNET  = '192.168.42'
+config_file=File.expand_path(File.join(File.dirname(__FILE__), 'vagrant_variables.yml'))
+settings=YAML.load_file(config_file)
+
+NMONS   = settings['mon_vms']
+NOSDS   = settings['osd_vms']
+NMDSS   = settings['mds_vms']
+NRGWS   = settings['rgw_vms']
+CLIENTS = settings['client_vms']
+SUBNET  = settings['subnet']
+BOX     = settings['vagrant_box']
 
 ansible_provision = proc do |ansible|
   ansible.playbook = 'site.yml'
@@ -16,17 +21,39 @@ ansible_provision = proc do |ansible|
   # these aren't supported by Vagrant, see
   # https://github.com/mitchellh/vagrant/issues/3539
   ansible.groups = {
-    'mons' => (0..NMONS - 1).map { |j| "mon#{j}" },
-    'osds' => (0..NOSDS - 1).map { |j| "osd#{j}" },
-    'mdss' => (0..NMDSS - 1).map { |j| "mds#{j}" },
-    'rgws' => (0..NRGWS - 1).map { |j| "rgw#{j}" }
+    'mons'    => (0..NMONS - 1).map { |j| "mon#{j}" },
+    'osds'    => (0..NOSDS - 1).map { |j| "osd#{j}" },
+    'mdss'    => (0..NMDSS - 1).map { |j| "mds#{j}" },
+    'rgws'    => (0..NRGWS - 1).map { |j| "rgw#{j}" },
+    'clients' => (0..CLIENTS - 1).map { |j| "client#{j}" }
   }
 
   # In a production deployment, these should be secret
-  ansible.extra_vars = {
-    fsid: '4a158d27-f750-41d5-9e7f-26ce4c9d2d45',
-    monitor_secret: 'AQAWqilTCDh7CBAAawXt6kyTgLFCxSvJhTEmuw=='
-  }
+  if NMDSS != '0' && NRGWS != '0'
+    ansible.extra_vars = {
+      fsid: '4a158d27-f750-41d5-9e7f-26ce4c9d2d45',
+      monitor_secret: 'AQAWqilTCDh7CBAAawXt6kyTgLFCxSvJhTEmuw==',
+      radosgw: 'true',
+      mds: 'true',
+    }
+  elsif NMDSS != '0'
+    ansible.extra_vars = {
+      fsid: '4a158d27-f750-41d5-9e7f-26ce4c9d2d45',
+      monitor_secret: 'AQAWqilTCDh7CBAAawXt6kyTgLFCxSvJhTEmuw==',
+      mds: 'true',
+    }
+  elsif NRGWS != '0'
+    ansible.extra_vars = {
+      fsid: '4a158d27-f750-41d5-9e7f-26ce4c9d2d45',
+      monitor_secret: 'AQAWqilTCDh7CBAAawXt6kyTgLFCxSvJhTEmuw==',
+      radosgw: 'true',
+    }
+  else
+    ansible.extra_vars = {
+      fsid: '4a158d27-f750-41d5-9e7f-26ce4c9d2d45',
+      monitor_secret: 'AQAWqilTCDh7CBAAawXt6kyTgLFCxSvJhTEmuw==',
+    }
+  end
   ansible.limit = 'all'
 end
 
@@ -38,7 +65,7 @@ def create_vmdk(name, size)
 end
 
 Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
-  config.vm.box = 'ubuntu/trusty64'
+  config.vm.box = BOX
   config.ssh.insert_key = false # workaround for https://github.com/mitchellh/vagrant/issues/5048
 
   (0..CLIENTS - 1).each do |i|

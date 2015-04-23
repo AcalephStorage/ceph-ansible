@@ -34,11 +34,13 @@
 - name: Enable multiverse repo for Trusty
   command: "apt-add-repository multiverse"
   when: ansible_lsb.codename in ['trusty'] and not http_100_continue
+  changed_when: False
 
 # Disable the repo when we are using the Ceph repo for 100-continue packages
 - name: Disable multiverse repo for Trusty
   command: "apt-add-repository -r multiverse"
   when: ansible_lsb.codename in ['trusty'] and http_100_continue
+  changed_when: False
 
 # If using 100-continue, add Ceph dev key
 - name: Install the Ceph development repository key
@@ -86,7 +88,7 @@
     - libapache2-mod-fastcgi
   when: purge_default_apache.changed or purge_ceph_apache.changed
 
-- name: "Install Apache, fastcgi and Rados Gateway"
+- name: "Install Apache and fastcgi"
   apt: >
     pkg={{ item }}
     state=present
@@ -95,19 +97,23 @@
   with_items:
     - apache2
     - libapache2-mod-fastcgi
-    - radosgw
 
 ## Prepare Apache
 #
 
 - name: Install default httpd.conf
-  template: src=httpd.conf dest=/etc/apache2/httpd.conf owner=root group=root
+  template: >
+    src=httpd.conf
+    dest=/etc/apache2/httpd.conf
+    owner=root
+    group=root
 
 - name: Enable some apache mod rewrite and fastcgi
   command: "{{ item }}"
   with_items:
     - a2enmod rewrite
     - a2enmod fastcgi
+  changed_when: False
 
 - name: Install Rados Gateway vhost
   template: >
@@ -119,14 +125,6 @@
 ## Prepare RGW
 #
 
-- name: Create RGW directory
-  file: >
-    path=/var/lib/ceph/radosgw/{{ ansible_fqdn }}
-    state=directory
-    owner=root
-    group=root
-    mode=0644
-
 - name: Enable Rados Gateway vhost and disable default site
   command: "{{ item }}"
   with_items:
@@ -135,21 +133,12 @@
   ignore_errors: True
   notify:
     - restart apache2
+  changed_when: False
 
 - name: Install s3gw.fcgi script
-  copy: >
-    src=s3gw.fcgi
+  template: >
+    src=s3gw.fcgi.j2
     dest=/var/www/s3gw.fcgi
     mode=0555
     owner=root
     group=root
-
-## If we don't perform this check Ansible will start multiple instance of radosgw
-- name: Check if RGW is started
-  command: /etc/init.d/radosgw status
-  register: rgwstatus
-  ignore_errors: True
-
-- name: Start RGW
-  command: /etc/init.d/radosgw start
-  when: rgwstatus.rc != 0

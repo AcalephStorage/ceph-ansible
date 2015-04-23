@@ -1,3 +1,4 @@
+#jinja2: trim_blocks: "true", lstrip_blocks: "true"
 # {{ ansible_managed }}
 
 [global]
@@ -63,7 +64,8 @@
 [client]
   rbd cache = true
   rbd cache writethrough until flush = true
-  admin socket = /var/run/ceph/$cluster-$type.$id.$pid.$cctid.asok
+  admin socket = /var/run/ceph/$cluster-$type.$id.$pid.$cctid.asok # must be writable by QEMU and allowed by SELinux or AppArmor
+  log file = {{ rbd_client_log_file }} # must be writable by QEMU and allowed by SELinux or AppArmor
 
 [mon]
   mon osd down out interval = {{ mon_osd_down_out_interval }}
@@ -134,16 +136,28 @@
 {% if radosgw %}
 {% for host in groups['rgws'] %}
 {% if hostvars[host]['ansible_hostname'] is defined %}
-[client.radosgw.gateway]
+[client.radosgw.{{ hostvars[host]['ansible_hostname'] }}]
   {% if radosgw_dns_name is defined %}
     rgw dns name = {{ radosgw_dns_name }}
   {% endif %}
   host = {{ hostvars[host]['ansible_hostname'] }}
-  keyring = /etc/ceph/radosgw.gateway.keyring
-  rgw socket path = /tmp/radosgw.sock
-  log file = /var/log/ceph/radosgw.log
-  rgw data = /var/lib/ceph/radosgw/{{ hostvars[host]['ansible_hostname'] }}
+  keyring = /var/lib/ceph/radosgw/ceph-radosgw.{{ hostvars[host]['ansible_hostname'] }}/keyring
+  rgw socket path = /tmp/radosgw-{{ hostvars[host]['ansible_hostname'] }}.sock
+  log file = /var/log/ceph/radosgw-{{ hostvars[host]['ansible_hostname'] }}.log
+  rgw data = /var/lib/ceph/radosgw/ceph-radosgw.{{ hostvars[host]['ansible_hostname'] }}
   rgw print continue = false
+  {% if radosgw_frontend  == 'civetweb' %}
+  rgw frontends = civetweb port={{ radosgw_civetweb_port }}
+  {% endif %}
 {% endif %}
 {% endfor %}
+{% endif %}
+
+{% if restapi %}
+[client.restapi]
+  public addr = {{ hostvars[inventory_hostname]['ansible_' + restapi_interface]['ipv4']['address'] }}:{{ restapi_port }}
+  restapi base url = {{ restapi_base_url }}
+  restapi log level = {{ restapi_log_level }}
+  keyring = /var/lib/ceph/restapi/ceph-restapi/keyring
+  log file = /var/log/ceph/ceph-restapi.log
 {% endif %}

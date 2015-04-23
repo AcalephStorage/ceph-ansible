@@ -6,8 +6,18 @@
   wait_for: path=/etc/ceph/ceph.client.admin.keyring
 
 - name: Create RGW keyring
-  command: ceph auth get-or-create client.radosgw.gateway osd 'allow rwx' mon 'allow rw' -o /etc/ceph/radosgw.gateway.keyring creates=/etc/ceph/radosgw.gateway.keyring
+  command: >
+    ceph auth get-or-create client.radosgw.{{ hostvars[item]['ansible_hostname'] }} osd 'allow rwx' mon 'allow rw' -o /etc/ceph/ceph.client.radosgw.{{ hostvars[item]['ansible_hostname'] }}.keyring
+    creates=/etc/ceph/ceph.client.radosgw.{{ hostvars[item]['ansible_hostname'] }}.keyring
   when: cephx and radosgw
+  with_items: groups.rgws
+  changed_when: False
+
+- name: Create Ceph REST API keyring
+  command: >
+    ceph auth get-or-create client.restapi osd 'allow *' mon 'allow *' -o /etc/ceph/ceph.client.restapi.keyring
+    creates=/etc/ceph/ceph.client.restapi.keyring
+  when: cephx and restapi
   changed_when: False
 
 - include: openstack_config.yml
@@ -17,6 +27,16 @@
   shell: ls -1 /etc/ceph/*.keyring
   register: ceph_keys
   when: cephx
+  changed_when: False
+
+- name: Set keys permissions
+  file: >
+    path={{ item }}
+    mode=0600
+    owner=root
+    group=root
+  with_items:
+    - "{{ ceph_keys.stdout_lines }}"
 
 - name: Copy keys to the ansible server
   fetch: >
